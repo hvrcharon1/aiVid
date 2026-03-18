@@ -3,6 +3,7 @@ const openai = require('./openai');
 const gemini = require('./gemini');
 const grok = require('./grok');
 const deepseek = require('./deepseek');
+const copilot = require('./copilot');
 
 const providers = {
   anthropic,
@@ -10,6 +11,7 @@ const providers = {
   gemini,
   grok,
   deepseek,
+  copilot,
 };
 
 function getProvider(name) {
@@ -26,6 +28,7 @@ function listProviders() {
     name: p.name,
     label: p.label,
     models: p.MODELS,
+    extraFields: p.EXTRA_FIELDS || [],
   }));
 }
 

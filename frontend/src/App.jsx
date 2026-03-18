@@ -6,6 +6,7 @@ import SqlPreview from './components/SqlPreview';
 import ResultsTable from './components/ResultsTable';
 import SchemaViewer from './components/SchemaViewer';
 import QueryHistory from './components/QueryHistory';
+import McpPanel from './components/McpPanel';
 import * as api from './services/api';
 
 // Generate a unique session ID for this browser tab
@@ -25,8 +26,11 @@ export default function App() {
   const [converting, setConverting] = useState(false);
   const [executing, setExecuting] = useState(false);
 
+  // Workspace tab: 'query' or 'mcp'
+  const [activeWorkspace, setActiveWorkspace] = useState('query');
+
   // AI provider config
-  const providerConfigRef = useRef({ provider: 'anthropic', model: '', apiKey: '' });
+  const providerConfigRef = useRef({ provider: 'anthropic', model: '', apiKey: '', extraFields: {} });
 
   const handleProviderConfigChange = useCallback((config) => {
     providerConfigRef.current = config;
@@ -128,33 +132,35 @@ export default function App() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <h1>Oracle NLP Query</h1>
-          <p>Talk to your database in plain English</p>
+          <h1>aiVid</h1>
+          <p>AI Vision for Data</p>
         </div>
 
-        <div className="sidebar-section">
-          <h3>AI Provider</h3>
-          <ProviderSettings onConfigChange={handleProviderConfigChange} />
-        </div>
+        <div className="sidebar-body">
+          <div className="sidebar-section">
+            <h3>AI Provider</h3>
+            <ProviderSettings onConfigChange={handleProviderConfigChange} />
+          </div>
 
-        <div className="sidebar-section">
-          <h3>Connection</h3>
-          <ConnectionForm
-            onConnect={handleConnect}
-            onDisconnect={handleDisconnect}
-            isConnected={connected}
-            connectionInfo={connectionInfo}
-          />
-        </div>
+          <div className="sidebar-section">
+            <h3>Oracle Connection</h3>
+            <ConnectionForm
+              onConnect={handleConnect}
+              onDisconnect={handleDisconnect}
+              isConnected={connected}
+              connectionInfo={connectionInfo}
+            />
+          </div>
 
-        <div className="sidebar-section" style={{ flex: 1, overflow: 'hidden' }}>
-          <h3>Schema Browser</h3>
-          <SchemaViewer schema={schema} />
-        </div>
+          <div className="sidebar-section">
+            <h3>Schema Browser</h3>
+            <SchemaViewer schema={schema} />
+          </div>
 
-        <div className="sidebar-section">
-          <h3>History</h3>
-          <QueryHistory history={history} onSelect={handleHistorySelect} />
+          <div className="sidebar-section">
+            <h3>History</h3>
+            <QueryHistory history={history} onSelect={handleHistorySelect} />
+          </div>
         </div>
       </aside>
 
@@ -172,33 +178,55 @@ export default function App() {
           </div>
         </div>
 
-        <div className="workspace">
-          {/* Query Input */}
-          <QueryInput onSubmit={handleConvert} disabled={converting} />
-
-          {/* Loading indicator for conversion */}
-          {converting && (
-            <div className="loading-overlay">
-              <span className="loading-spinner" />
-              Converting your English to SQL...
-            </div>
-          )}
-
-          {/* SQL Preview & Editor */}
-          <SqlPreview
-            sql={sql}
-            type={sqlType}
-            onSqlChange={setSql}
-            onExecute={handleExecute}
-            onClear={handleClearSql}
-            loading={executing}
-          />
-
-          {/* Results */}
-          {(result || queryError || (!sql && !converting)) && (
-            <ResultsTable result={result} error={queryError} />
-          )}
+        {/* Workspace Tabs */}
+        <div className="workspace-tabs">
+          <button
+            className={`workspace-tab ${activeWorkspace === 'query' ? 'active' : ''}`}
+            onClick={() => setActiveWorkspace('query')}
+          >
+            NLP Query
+          </button>
+          <button
+            className={`workspace-tab ${activeWorkspace === 'mcp' ? 'active' : ''}`}
+            onClick={() => setActiveWorkspace('mcp')}
+          >
+            Oracle SQLcl MCP
+          </button>
         </div>
+
+        {/* Query Workspace */}
+        {activeWorkspace === 'query' && (
+          <div className="workspace">
+            <QueryInput onSubmit={handleConvert} disabled={converting} />
+
+            {converting && (
+              <div className="loading-overlay">
+                <span className="loading-spinner" />
+                Converting your English to SQL...
+              </div>
+            )}
+
+            <SqlPreview
+              sql={sql}
+              type={sqlType}
+              onSqlChange={setSql}
+              onExecute={handleExecute}
+              onClear={handleClearSql}
+              loading={executing}
+            />
+
+            {(result || queryError || (!sql && !converting)) && (
+              <ResultsTable result={result} error={queryError} />
+            )}
+          </div>
+        )}
+
+        {/* MCP Workspace */}
+        {activeWorkspace === 'mcp' && (
+          <div className="workspace" style={{ padding: 0, gap: 0 }}>
+            <McpPanel />
+          </div>
+        )}
       </main>
     </div>
   );

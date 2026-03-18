@@ -8,7 +8,7 @@ function loadSaved() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
   } catch { /* ignore */ }
-  return { provider: 'anthropic', model: '', apiKey: '' };
+  return { provider: 'anthropic', model: '', apiKey: '', extraFields: {} };
 }
 
 function saveConfig(config) {
@@ -35,6 +35,7 @@ export default function ProviderSettings({ onConfigChange }) {
 
   const currentProvider = providers.find(p => p.name === config.provider);
   const models = currentProvider?.models || [];
+  const extraFields = currentProvider?.extraFields || [];
 
   const handleProviderChange = (e) => {
     const provider = e.target.value;
@@ -43,6 +44,7 @@ export default function ProviderSettings({ onConfigChange }) {
       provider,
       model: newProvider?.models?.[0]?.id || '',
       apiKey: '',
+      extraFields: {},
     });
   };
 
@@ -52,6 +54,13 @@ export default function ProviderSettings({ onConfigChange }) {
 
   const handleApiKeyChange = (e) => {
     setConfig(prev => ({ ...prev, apiKey: e.target.value }));
+  };
+
+  const handleExtraFieldChange = (key, value) => {
+    setConfig(prev => ({
+      ...prev,
+      extraFields: { ...prev.extraFields, [key]: value },
+    }));
   };
 
   return (
@@ -83,6 +92,19 @@ export default function ProviderSettings({ onConfigChange }) {
           ))}
         </select>
       </div>
+
+      {/* Extra Fields (e.g. Azure Endpoint for Copilot) */}
+      {extraFields.map(field => (
+        <div className="form-group" key={field.key}>
+          <label>{field.label}</label>
+          <input
+            type={field.type || 'text'}
+            value={config.extraFields?.[field.key] || ''}
+            onChange={e => handleExtraFieldChange(field.key, e.target.value)}
+            placeholder={field.placeholder || ''}
+          />
+        </div>
+      ))}
 
       {/* API Key */}
       <div className="form-group">

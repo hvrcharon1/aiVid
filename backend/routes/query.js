@@ -12,7 +12,7 @@ router.get('/providers', (req, res) => {
 // Convert English to SQL
 router.post('/convert', async (req, res) => {
   try {
-    const { sessionId, prompt, provider, model, apiKey } = req.body;
+    const { sessionId, prompt, provider, model, apiKey, extraFields } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: 'prompt is required' });
@@ -32,6 +32,7 @@ router.post('/convert', async (req, res) => {
       provider,
       model,
       apiKey,
+      ...extraFields,
     });
     res.json(result);
   } catch (err) {
@@ -95,7 +96,7 @@ router.post('/execute', async (req, res) => {
 // Explain SQL in plain English
 router.post('/explain', async (req, res) => {
   try {
-    const { sql, provider, model, apiKey } = req.body;
+    const { sql, provider, model, apiKey, extraFields } = req.body;
     if (!sql) {
       return res.status(400).json({ error: 'sql is required' });
     }
@@ -104,6 +105,7 @@ router.post('/explain', async (req, res) => {
       provider,
       model,
       apiKey,
+      ...extraFields,
     });
     res.json({ explanation });
   } catch (err) {

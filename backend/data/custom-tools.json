@@ -1,0 +1,26 @@
+[
+  {
+    "id": "47161477-a98f-4199-b0a8-fc616ea0984f",
+    "name": "get-patient-allergies",
+    "description": "Returns all allergies for a specific patient",
+    "parameters": [
+      {
+        "name": "patient_id",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "sqlTemplate": "SELECT * FROM ALLERGIES WHERE patient_id = '{{patient_id}}'",
+    "createdAt": "2026-03-18T10:57:47.773Z",
+    "updatedAt": "2026-03-18T10:57:47.773Z"
+  },
+  {
+    "id": "26db0af5-f5b9-4556-9f1d-903e6051bd60",
+    "name": "get-api-usage-stats",
+    "description": "Shows top API endpoints by usage count",
+    "parameters": [],
+    "sqlTemplate": "SELECT endpoint, COUNT(*) as call_count FROM API_REQUEST_LOGS GROUP BY endpoint ORDER BY call_count DESC FETCH FIRST 20 ROWS ONLY",
+    "createdAt": "2026-03-18T11:14:57.689Z",
+    "updatedAt": "2026-03-18T11:14:57.689Z"
+  }
+]

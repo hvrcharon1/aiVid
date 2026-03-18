@@ -2,7 +2,7 @@
 
 **Talk to your Oracle database in plain English.**
 
-aiVid is a full-stack web application that lets you connect to any Oracle database, describe what you need in natural language, and automatically generates and executes the corresponding SQL or PL/SQL code. It supports multiple AI providers so you can use whichever model works best for you.
+aiVid is a full-stack web application that lets you connect to any Oracle database, describe what you need in natural language, and automatically generates and executes the corresponding SQL or PL/SQL code. It supports multiple AI providers and integrates with Oracle SQLcl MCP Server for advanced database operations.
 
 ---
 
@@ -10,6 +10,7 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 
 - [Features](#features)
 - [Supported AI Providers](#supported-ai-providers)
+- [Oracle SQLcl MCP Integration](#oracle-sqlcl-mcp-integration)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -22,6 +23,8 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
   - [Executing Queries](#executing-queries)
   - [Using the Schema Browser](#using-the-schema-browser)
   - [Query History](#query-history)
+  - [Using Oracle SQLcl MCP Tools](#using-oracle-sqlcl-mcp-tools)
+  - [Custom Tools](#custom-tools)
 - [Project Structure](#project-structure)
 - [API Reference](#api-reference)
 - [Troubleshooting](#troubleshooting)
@@ -33,7 +36,8 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 ## Features
 
 - **Natural Language to SQL** — Describe what you want in plain English and get accurate Oracle SQL or PL/SQL generated automatically.
-- **Multi-Provider AI Support** — Choose from 5 AI providers and 17+ models including Claude, GPT, Gemini, Grok, and DeepSeek.
+- **Multi-Provider AI Support** — Choose from 6 AI providers and 20+ models including Claude, GPT, Gemini, Grok, DeepSeek, and Microsoft Copilot.
+- **Oracle SQLcl MCP Server** — Full integration with Oracle's Model Context Protocol server for advanced database operations including ER diagram generation, DDL extraction, SQLcl scripting, metadata browsing, and more.
 - **Connect to Any Oracle Database** — Works with any Oracle database instance. Uses Oracle's Thin mode by default, so no Oracle Client installation is required.
 - **Schema-Aware Generation** — Automatically reads your database tables and columns so the AI generates accurate, context-aware SQL.
 - **Live SQL Editor** — Review, edit, and refine the generated SQL before executing it.
@@ -42,6 +46,7 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 - **Schema Browser** — Explore your database tables and columns directly from the sidebar.
 - **Query History** — Keeps a running history of your queries for quick reuse.
 - **Per-Session API Keys** — Enter API keys directly in the UI without modifying server configuration.
+- **Custom Tools** — Define reusable, parameterized SQL templates as custom tools. Each custom tool wraps a SQL template with named `{{placeholder}}` parameters, is persisted to disk, and executes via the MCP `execute_sql` tool. Manage custom tools through a dedicated UI tab with full create, edit, and delete support.
 
 ---
 
@@ -54,6 +59,62 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 | **Google (Gemini)** | Gemini 2.0 Flash, 2.0 Flash Lite, 1.5 Pro, 1.5 Flash | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 | **xAI (Grok)** | Grok 3, Grok 3 Mini, Grok 2 | [console.x.ai](https://console.x.ai/) |
 | **DeepSeek (Coder)** | DeepSeek Coder, DeepSeek Chat (V3), DeepSeek Reasoner (R1) | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
+| **Microsoft Copilot (Azure)** | GPT-4o (Azure), GPT-4o Mini (Azure), GPT-4, GPT-3.5 Turbo | [portal.azure.com](https://portal.azure.com/) |
+
+### Microsoft Copilot Setup
+
+Microsoft Copilot in aiVid uses Azure OpenAI Service. To use it:
+
+1. Create an Azure OpenAI resource in the [Azure Portal](https://portal.azure.com/).
+2. Deploy a model (e.g., gpt-4o) in your Azure OpenAI Studio.
+3. In aiVid, select **Microsoft Copilot (Azure)** as the provider.
+4. Enter your **Azure Endpoint** (e.g., `https://your-resource.openai.azure.com`) and **API Key**.
+5. Select the model matching your Azure deployment name.
+
+You can set these in `backend/.env` or enter them directly in the UI:
+
+```env
+AZURE_OPENAI_API_KEY=your-azure-key
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+AZURE_OPENAI_API_VERSION=2024-10-21
+```
+
+---
+
+## Oracle SQLcl MCP Integration
+
+aiVid integrates with the **Oracle SQLcl MCP Server** — Oracle's official Model Context Protocol server built into SQLcl 24.3+. This integration gives you access to powerful database tools directly from the aiVid interface, making Oracle stand out as a modern platform for IT professionals.
+
+### What is Oracle SQLcl MCP?
+
+The MCP (Model Context Protocol) server in Oracle SQLcl exposes database operations as standardized tools that AI applications can discover and invoke. Unlike simple SQL execution, MCP tools provide rich, structured access to the full Oracle ecosystem.
+
+### Available MCP Tool Categories
+
+| Category | Capabilities |
+|---|---|
+| **Query** | Execute SQL queries with formatted results |
+| **PL/SQL** | Run PL/SQL blocks, anonymous blocks, and scripts |
+| **Schema** | List tables, describe objects, browse database structure |
+| **DDL** | Extract DDL for any database object (tables, views, procedures, packages) |
+| **Diagram** | Generate ER diagrams in Mermaid format |
+| **SQLcl** | Execute SQLcl-specific commands (CTAS, DATAPUMP, LIQUIBASE, etc.) |
+| **Data** | Export and import data operations |
+| **Info** | Database metadata, object counts, system information |
+
+### Why Use MCP Over Direct SQL?
+
+- **Richer tooling** — Access SQLcl features like ER diagram generation, Liquibase changelog generation, and Data Pump operations that aren't available through plain SQL.
+- **Structured output** — Tools return well-formatted, structured results rather than raw query output.
+- **Discoverability** — Browse all available tools and their parameters through the UI.
+- **Oracle ecosystem integration** — Leverage the full power of SQLcl including APEX integration, REST services, and more.
+- **AI-ready** — MCP is the emerging standard protocol for connecting AI applications to tools and data sources.
+
+### SQLcl MCP Prerequisites
+
+- **Oracle SQLcl 24.3 or later** with MCP support enabled.
+- Download from [oracle.com/tools/downloads/sqlcl](https://www.oracle.com/database/sqldeveloper/technologies/sqlcl/download/).
+- Ensure the `sql` command is available in your system PATH, or configure the path in the `.env` file or UI.
 
 ---
 
@@ -73,6 +134,10 @@ Before installing aiVid, make sure you have the following installed on your syst
    - You need the hostname, port, service name, and valid credentials
 
 4. **At least one AI provider API key** (see [Supported AI Providers](#supported-ai-providers) above)
+
+5. **Oracle SQLcl 24.3+** *(optional, for MCP features)*
+   - Required only if you want to use the Oracle SQLcl MCP integration
+   - Download from [oracle.com](https://www.oracle.com/database/sqldeveloper/technologies/sqlcl/download/)
 
 > **Note:** aiVid uses Oracle's `oracledb` package in **Thin mode** by default. This means you do **not** need to install Oracle Instant Client. If you do have Oracle Client installed, it will automatically use Thick mode for additional features.
 
@@ -150,6 +215,15 @@ XAI_API_KEY=xai-your-key-here
 
 # DeepSeek
 DEEPSEEK_API_KEY=sk-your-key-here
+
+# Microsoft Copilot (Azure OpenAI)
+AZURE_OPENAI_API_KEY=your-azure-key
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+AZURE_OPENAI_API_VERSION=2024-10-21
+
+# Oracle SQLcl MCP Server (optional)
+# Path to SQLcl binary. Leave empty to auto-detect from PATH.
+SQLCL_PATH=
 ```
 
 > **Tip:** You don't need to set all keys. Set only the ones for the providers you intend to use. You can also enter API keys directly in the application UI on a per-session basis.
@@ -213,9 +287,11 @@ npm start
 
 ## Usage Guide
 
+The application has two main workspace tabs: **NLP Query** for natural language SQL generation and **Oracle SQLcl MCP** for advanced database operations.
+
 ### Connecting to a Database
 
-1. In the sidebar under **Connection**, fill in your Oracle database details:
+1. In the sidebar under **Oracle Connection**, fill in your Oracle database details:
    - **Host** — The hostname or IP address of your Oracle server (default: `localhost`)
    - **Port** — The listener port (default: `1521`)
    - **Service Name** — The Oracle service name (default: `ORCL`)
@@ -230,11 +306,13 @@ npm start
 
 ### Selecting an AI Provider
 
-1. In the sidebar under **AI Provider**, select your preferred provider from the dropdown (e.g., Anthropic, OpenAI, Gemini, Grok, or DeepSeek).
+1. In the sidebar under **AI Provider**, select your preferred provider from the dropdown (e.g., Anthropic, OpenAI, Gemini, Grok, DeepSeek, or Microsoft Copilot).
 
 2. Choose a specific model from the **Model** dropdown.
 
-3. If you haven't set an API key in the server `.env` file, enter it in the **API Key** field. Keys entered here are stored in your browser's local storage and override any server-side key for that provider.
+3. For **Microsoft Copilot (Azure)**, you will also see an **Azure Endpoint** field. Enter your Azure OpenAI resource URL.
+
+4. If you haven't set an API key in the server `.env` file, enter it in the **API Key** field. Keys entered here are stored in your browser's local storage and override any server-side key for that provider.
 
 > Your provider and model selection is saved in your browser and persists across page refreshes.
 
@@ -305,6 +383,75 @@ The **History** section in the sidebar keeps a log of your recent queries:
 - Click on any history entry to reload its generated SQL into the editor.
 - History stores up to 50 entries per session.
 
+### Using Oracle SQLcl MCP Tools
+
+Switch to the **Oracle SQLcl MCP** tab in the main workspace to access advanced Oracle database tools.
+
+#### Starting the MCP Server
+
+1. Click the **Oracle SQLcl MCP** tab.
+2. Under the **Connection** tab, enter your SQLcl and database details:
+   - **SQLcl Path** — Path to the `sql` binary (leave empty to auto-detect from PATH)
+   - **Host**, **Port**, **Service Name** — Same as your Oracle connection
+   - **Username** and **Password** — Oracle credentials
+3. Click **Start MCP Server**. This spawns an Oracle SQLcl process in MCP mode.
+4. Once connected, the **Tools** tab populates with all available MCP tools.
+
+#### Browsing and Running Tools
+
+1. Switch to the **Tools** tab to see all available MCP tools grouped by category.
+2. Click on any tool to see its description and input parameters.
+3. Fill in the required parameters in the form.
+4. Click **Run Tool** to execute.
+5. Switch to the **Output** tab to view the results.
+
+#### Example MCP Workflows
+
+**Generate an ER Diagram:**
+1. Select the `generate_er_diagram` tool.
+2. Optionally specify which tables to include.
+3. Run the tool to get a Mermaid-format ER diagram.
+
+**Extract DDL:**
+1. Select the `get_ddl` tool.
+2. Enter the object type (e.g., `TABLE`) and object name.
+3. Get the complete CREATE statement for any database object.
+
+**Run SQLcl Commands:**
+1. Select the `execute_sqlcl_command` tool.
+2. Enter any SQLcl command (e.g., `CTAS`, `DDL`, `INFO`, `LIQUIBASE`).
+3. Get structured output from the command.
+
+### Custom Tools
+
+Custom tools let you save reusable, parameterized SQL operations that execute through the MCP server. Each custom tool wraps a SQL template with named `{{placeholder}}` parameters, so you can run common queries without retyping them.
+
+#### Creating a Custom Tool
+
+1. Open the **Oracle SQLcl MCP** tab and click the **Custom** tab.
+2. Fill in the form:
+   - **Tool Name** — A short identifier (e.g., `check-user-count`).
+   - **Description** — What the tool does.
+   - **Parameters** — Click **+ Add** to define named parameters. Each parameter has a name, type (`string` or `number`), and an optional required flag.
+   - **SQL Template** — The SQL to execute. Use `{{paramName}}` placeholders for parameters (e.g., `SELECT COUNT(*) FROM users WHERE role = '{{role}}'`).
+3. Click **Save Tool**. The tool is persisted to `backend/data/custom-tools.json` and survives server restarts.
+
+#### Editing and Deleting Custom Tools
+
+- Saved tools appear in a list below the form on the **Custom** tab.
+- Click **Edit** to load a tool back into the form for modification, then click **Update Tool** to save.
+- Click **Delete** to remove a tool. An inline confirmation prompt (Yes/No) appears to prevent accidental deletion.
+
+#### Running a Custom Tool
+
+1. Switch to the **Tools** tab. Custom tools appear under a **Custom** category alongside built-in MCP tools. Each tool displays a badge (**Built-in** or **Custom**) for easy identification.
+2. Select a custom tool. The detail pane shows its description, SQL template, and auto-generated input fields for each parameter.
+3. Fill in the parameter values and click **Run Tool**.
+4. The backend substitutes the parameter values into the SQL template and executes the rendered SQL via the MCP server's SQL execution tool.
+5. Results appear in the **Output** tab, the same as built-in tool results.
+
+> **Note:** Custom tools require an active MCP server connection to execute, since they run SQL through the MCP `execute_sql` tool. You can create and manage custom tools at any time, but execution is only available when connected.
+
 ---
 
 ## Project Structure
@@ -312,16 +459,24 @@ The **History** section in the sidebar keeps a log of your recent queries:
 ```
 aiVid/
 ├── package.json                          # Root scripts (dev, install:all, build)
+├── LICENSE                               # MIT License
+├── README.md                             # This documentation
 ├── backend/
 │   ├── package.json                      # Backend dependencies
 │   ├── server.js                         # Express server entry point
 │   ├── .env.example                      # Environment variable template
+│   ├── data/
+│   │   └── custom-tools.json            # Persisted custom tools (auto-created)
 │   ├── routes/
 │   │   ├── database.js                   # Database connection & schema endpoints
-│   │   └── query.js                      # SQL conversion, execution & explain endpoints
+│   │   ├── query.js                      # SQL conversion, execution & explain endpoints
+│   │   ├── mcp.js                        # Oracle SQLcl MCP server endpoints
+│   │   └── customTools.js               # Custom tools CRUD & execute endpoints
 │   └── services/
 │       ├── nlpService.js                 # NLP-to-SQL service (delegates to providers)
 │       ├── oracleService.js              # Oracle DB connection & query execution
+│       ├── mcpService.js                 # Oracle SQLcl MCP client management
+│       ├── customToolsService.js         # Custom tools CRUD, persistence & execution
 │       └── providers/
 │           ├── index.js                  # Provider registry
 │           ├── common.js                 # Shared system prompt & SQL parsing
@@ -329,7 +484,8 @@ aiVid/
 │           ├── openai.js                 # OpenAI (GPT) provider
 │           ├── gemini.js                 # Google (Gemini) provider
 │           ├── grok.js                   # xAI (Grok) provider
-│           └── deepseek.js              # DeepSeek (Coder) provider
+│           ├── deepseek.js              # DeepSeek (Coder) provider
+│           └── copilot.js               # Microsoft Copilot (Azure OpenAI) provider
 └── frontend/
     ├── package.json                      # Frontend dependencies
     ├── index.html                        # HTML entry point
@@ -347,7 +503,8 @@ aiVid/
             ├── SqlPreview.jsx            # Generated SQL editor panel
             ├── ResultsTable.jsx          # Query results display table
             ├── SchemaViewer.jsx          # Database schema browser
-            └── QueryHistory.jsx          # Query history sidebar
+            ├── QueryHistory.jsx          # Query history sidebar
+            └── McpPanel.jsx             # Oracle SQLcl MCP tools panel
 ```
 
 ---
@@ -390,13 +547,6 @@ POST /api/database/disconnect
 ```
 Disconnect from the current database.
 
-**Request body:**
-```json
-{
-  "sessionId": "unique-session-id"
-}
-```
-
 ---
 
 ```
@@ -416,7 +566,7 @@ Get detailed information about a specific table (columns, constraints, indexes).
 ```
 GET /api/query/providers
 ```
-List all available AI providers and their models.
+List all available AI providers, their models, and any extra configuration fields.
 
 ---
 
@@ -432,7 +582,10 @@ Convert plain English to Oracle SQL/PL*SQL.
   "prompt": "Show all employees with salary above 50000",
   "provider": "anthropic",
   "model": "claude-sonnet-4-20250514",
-  "apiKey": "optional-override-key"
+  "apiKey": "optional-override-key",
+  "extraFields": {
+    "azureEndpoint": "https://my-resource.openai.azure.com"
+  }
 }
 ```
 
@@ -453,28 +606,6 @@ POST /api/query/execute
 ```
 Execute SQL against the connected Oracle database.
 
-**Request body:**
-```json
-{
-  "sessionId": "unique-session-id",
-  "sql": "SELECT * FROM employees WHERE salary > 50000",
-  "type": "sql"
-}
-```
-
-**Response (SELECT):**
-```json
-{
-  "success": true,
-  "duration": "45ms",
-  "columns": ["EMPLOYEE_ID", "FIRST_NAME", "LAST_NAME", "SALARY"],
-  "rows": [
-    { "EMPLOYEE_ID": 101, "FIRST_NAME": "John", "LAST_NAME": "Smith", "SALARY": 75000 }
-  ],
-  "rowCount": 1
-}
-```
-
 ---
 
 ```
@@ -482,12 +613,180 @@ POST /api/query/explain
 ```
 Explain a SQL/PL*SQL statement in plain English.
 
+### MCP Endpoints
+
+```
+GET /api/mcp/status
+```
+Get the current MCP server connection status.
+
+---
+
+```
+POST /api/mcp/connect
+```
+Start and connect to an Oracle SQLcl MCP server.
+
 **Request body:**
 ```json
 {
-  "sql": "SELECT department_id, AVG(salary) FROM employees GROUP BY department_id",
-  "provider": "anthropic",
-  "model": "claude-sonnet-4-20250514"
+  "user": "db_username",
+  "password": "db_password",
+  "host": "localhost",
+  "port": "1521",
+  "serviceName": "ORCL",
+  "sqlclPath": "/path/to/sql"
+}
+```
+
+---
+
+```
+POST /api/mcp/disconnect
+```
+Stop the MCP server and disconnect.
+
+---
+
+```
+GET /api/mcp/tools
+```
+List all available MCP tools with their descriptions, categories, and input schemas.
+
+**Response:**
+```json
+{
+  "tools": [
+    {
+      "name": "execute_sql",
+      "description": "Execute a SQL statement",
+      "category": "Query",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": { "type": "string", "description": "SQL statement to execute" }
+        },
+        "required": ["sql"]
+      }
+    }
+  ]
+}
+```
+
+---
+
+```
+POST /api/mcp/tools/call
+```
+Invoke an MCP tool with arguments.
+
+**Request body:**
+```json
+{
+  "toolName": "get_ddl",
+  "args": {
+    "object_type": "TABLE",
+    "object_name": "EMPLOYEES"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "output": ["CREATE TABLE EMPLOYEES (\n  EMPLOYEE_ID NUMBER(6) NOT NULL,\n  ..."]
+}
+```
+
+---
+
+```
+GET /api/mcp/resources
+```
+List MCP resources exposed by the SQLcl server.
+
+### Custom Tools Endpoints
+
+```
+GET /api/tools/custom
+```
+List all saved custom tools.
+
+**Response:**
+```json
+{
+  "tools": [
+    {
+      "id": "uuid",
+      "name": "check-user-count",
+      "description": "Count users matching a role",
+      "parameters": [
+        { "name": "role", "type": "string", "required": true }
+      ],
+      "sqlTemplate": "SELECT COUNT(*) FROM users WHERE role = '{{role}}'",
+      "createdAt": "2026-03-18T10:00:00.000Z",
+      "updatedAt": "2026-03-18T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+```
+POST /api/tools/custom
+```
+Create a new custom tool.
+
+**Request body:**
+```json
+{
+  "name": "check-user-count",
+  "description": "Count users matching a role",
+  "parameters": [
+    { "name": "role", "type": "string", "required": true }
+  ],
+  "sqlTemplate": "SELECT COUNT(*) FROM users WHERE role = '{{role}}'"
+}
+```
+
+---
+
+```
+PUT /api/tools/custom/:id
+```
+Update an existing custom tool. Accepts the same fields as create.
+
+---
+
+```
+DELETE /api/tools/custom/:id
+```
+Delete a custom tool by ID.
+
+---
+
+```
+POST /api/tools/custom/:id/execute
+```
+Execute a custom tool. Renders the SQL template with the provided arguments and runs it via the MCP server's SQL execution tool. Requires an active MCP connection.
+
+**Request body:**
+```json
+{
+  "args": {
+    "role": "admin"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "sql": "SELECT COUNT(*) FROM users WHERE role = 'admin'",
+  "output": ["COUNT(*)\n----------\n42"]
 }
 ```
 
@@ -518,7 +817,7 @@ You need to connect to a database before executing SQL. The "Convert to SQL" fea
 
 **4. Frontend shows blank page or API errors**
 
-- Make sure the backend is running on port 3001 (check the terminal for `Oracle NLP Query API running on http://localhost:3001`).
+- Make sure the backend is running on port 3001 (check the terminal for `aiVid API running on http://localhost:3001`).
 - If running frontend and backend separately, ensure the Vite proxy is configured (it is by default in `vite.config.js`).
 
 **5. `npm run dev` fails with "concurrently not found"**
@@ -535,6 +834,32 @@ If you have Oracle Client installed but encounter Thick mode errors, the applica
 - Try a more specific prompt.
 - Try a different AI model (larger models generally produce better SQL).
 - Review and edit the generated SQL before executing.
+
+**8. MCP server fails to start**
+
+- Ensure Oracle SQLcl 24.3+ is installed and the `sql` command is in your PATH.
+- Verify by running `sql -version` in your terminal.
+- If SQLcl is installed in a non-standard location, set the `SQLCL_PATH` in `backend/.env` or enter the path in the MCP Connection tab.
+- Check that Java (JDK 11+) is installed, as SQLcl requires it.
+
+**9. Azure OpenAI / Microsoft Copilot errors**
+
+- Ensure you have deployed a model in your Azure OpenAI resource.
+- The model name in aiVid must match your Azure deployment name.
+- Check that your Azure endpoint URL is correct (format: `https://your-resource.openai.azure.com`).
+- Verify the API version is supported (default: `2024-10-21`).
+
+**10. Custom tool execution fails with "null connection not allowed"**
+
+This means the MCP server process is running but does not have an active database connection. The MCP transport may be connected while SQLcl itself is disconnected from the database (e.g., started with `/nolog`). Stop and restart the MCP server with valid database credentials.
+
+**11. Custom tool shows "Could not find a SQL execution tool"**
+
+The MCP server does not expose a recognized SQL execution tool (`execute_sql`, `run-sql`, `execute_query`, or `run_query`). Verify that your SQLcl version (24.3+) includes MCP tool support by running `sql -version` and checking the available tools in the Tools tab.
+
+**12. Custom tool shows "Missing required parameters"**
+
+One or more parameters marked as required in the custom tool definition were not filled in. Switch to the **Tools** tab, select the custom tool, and provide values for all fields marked with a red asterisk (*).
 
 ---
 
