@@ -73,6 +73,15 @@ export async function explainSQL(sql, providerConfig = {}) {
   return res.json();
 }
 
+export async function testProvider(providerConfig) {
+  const res = await fetch(`${API_BASE}/query/test-provider`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(providerConfig),
+  });
+  return res.json();
+}
+
 // ========== MCP Tools API ==========
 
 export async function mcpGetStatus() {

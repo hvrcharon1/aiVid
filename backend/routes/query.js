@@ -113,4 +113,20 @@ router.post('/explain', async (req, res) => {
   }
 });
 
+// Test AI provider connectivity
+router.post('/test-provider', async (req, res) => {
+  try {
+    const { provider, model, apiKey, extraFields } = req.body;
+    await nlpService.convertToSQL('SELECT 1 FROM DUAL', [], {
+      provider,
+      model,
+      apiKey,
+      ...(extraFields || {}),
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

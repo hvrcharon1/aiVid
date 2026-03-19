@@ -36,7 +36,7 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 ## Features
 
 - **Natural Language to SQL** — Describe what you want in plain English and get accurate Oracle SQL or PL/SQL generated automatically.
-- **Multi-Provider AI Support** — Choose from 6 AI providers and 20+ models including Claude, GPT, Gemini, Grok, DeepSeek, and Microsoft Copilot.
+- **Multi-Provider AI Support** — Choose from 8 AI providers and 40+ models including Claude, GPT, Gemini, Grok, DeepSeek, Microsoft Copilot, Ollama (local), and Groq.
 - **Oracle SQLcl MCP Server** — Full integration with Oracle's Model Context Protocol server for advanced database operations including ER diagram generation, DDL extraction, SQLcl scripting, metadata browsing, and more.
 - **Connect to Any Oracle Database** — Works with any Oracle database instance. Uses Oracle's Thin mode by default, so no Oracle Client installation is required.
 - **Schema-Aware Generation** — Automatically reads your database tables and columns so the AI generates accurate, context-aware SQL.
@@ -46,6 +46,7 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 - **Schema Browser** — Explore your database tables and columns directly from the sidebar.
 - **Query History** — Keeps a running history of your queries for quick reuse.
 - **Per-Session API Keys** — Enter API keys directly in the UI without modifying server configuration.
+- **Provider Connection Test** — Verify your AI provider and model are reachable with a single click. A green dot indicator appears next to the model name on successful connection, and a red dot with an error message if it fails. The status resets automatically when you change provider, model, or credentials.
 - **Custom Tools** — Define reusable, parameterized SQL templates as custom tools. Each custom tool wraps a SQL template with named `{{placeholder}}` parameters, is persisted to disk, and executes via the MCP `execute_sql` tool. Manage custom tools through a dedicated UI tab with full create, edit, and delete support.
 
 ---
@@ -60,6 +61,8 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 | **xAI (Grok)** | Grok 3, Grok 3 Mini, Grok 2 | [console.x.ai](https://console.x.ai/) |
 | **DeepSeek (Coder)** | DeepSeek Coder, DeepSeek Chat (V3), DeepSeek Reasoner (R1) | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
 | **Microsoft Copilot (Azure)** | GPT-4o (Azure), GPT-4o Mini (Azure), GPT-4, GPT-3.5 Turbo | [portal.azure.com](https://portal.azure.com/) |
+| **Ollama (Local)** | Qwen 3 Coder (30B), GPT-OSS (20B), DeepSeek R1 (8B/Full), Llama 3.1 (8B/70B), Code Llama, DeepSeek Coder V2, Qwen 2.5 Coder, Mistral, Mixtral, Phi-3, Gemma 2 | No key needed — [ollama.com](https://ollama.com/) |
+| **Groq** | Llama 3.3 70B, Llama 3.1 8B, DeepSeek R1 Distill 70B, Qwen QwQ 32B, Gemma 2 9B, Mixtral 8x7B, Compound Beta | [console.groq.com](https://console.groq.com/) |
 
 ### Microsoft Copilot Setup
 
@@ -78,6 +81,43 @@ AZURE_OPENAI_API_KEY=your-azure-key
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_API_VERSION=2024-10-21
 ```
+
+### Ollama Setup
+
+Ollama runs AI models locally on your machine — no API key or cloud account required. To use it:
+
+1. Install Ollama from [ollama.com](https://ollama.com/).
+2. Pull a model (e.g., `ollama pull llama3.1` or `ollama pull codellama`).
+3. Start the Ollama server: `ollama serve` (it runs on `http://localhost:11434` by default).
+4. In aiVid, select **Ollama (Local)** as the provider.
+5. Select the model you pulled from the model dropdown.
+6. Leave the **API Key** field empty (Ollama doesn't need one).
+
+If Ollama is running on a different host or port, enter the URL in the **Ollama Host URL** field in the UI, or set it in `backend/.env`:
+
+```env
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+> **Tip:** For SQL generation tasks, `codellama`, `deepseek-coder-v2`, and `qwen2.5-coder:7b` tend to produce the best results. The model dropdown lists popular models, but you can use any model you've pulled — select it from the list if it matches, or enter its name.
+
+### Groq Setup
+
+Groq provides ultra-fast inference for open-source models via their cloud API. To use it:
+
+1. Create a free account at [console.groq.com](https://console.groq.com/).
+2. Generate an API key from the Groq console.
+3. In aiVid, select **Groq** as the provider.
+4. Choose a model (e.g., Llama 3.3 70B, DeepSeek R1 Distill 70B, or Qwen QwQ 32B).
+5. Enter your Groq API key in the **API Key** field.
+
+You can also set the key in `backend/.env`:
+
+```env
+GROQ_API_KEY=gsk_your-groq-key-here
+```
+
+> **Tip:** Groq is known for extremely fast inference speeds. Models like `llama-3.3-70b-versatile` and `deepseek-r1-distill-llama-70b` offer strong SQL generation performance with sub-second response times.
 
 ---
 
@@ -134,6 +174,7 @@ Before installing aiVid, make sure you have the following installed on your syst
    - You need the hostname, port, service name, and valid credentials
 
 4. **At least one AI provider API key** (see [Supported AI Providers](#supported-ai-providers) above)
+   - Not required for **Ollama**, which runs models locally with no API key
 
 5. **Oracle SQLcl 24.3+** *(optional, for MCP features)*
    - Required only if you want to use the Oracle SQLcl MCP integration
@@ -221,6 +262,12 @@ AZURE_OPENAI_API_KEY=your-azure-key
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
 AZURE_OPENAI_API_VERSION=2024-10-21
 
+# Ollama (Local) - no API key needed
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Groq
+GROQ_API_KEY=your-groq-key
+
 # Oracle SQLcl MCP Server (optional)
 # Path to SQLcl binary. Leave empty to auto-detect from PATH.
 SQLCL_PATH=
@@ -306,13 +353,17 @@ The application has two main workspace tabs: **NLP Query** for natural language 
 
 ### Selecting an AI Provider
 
-1. In the sidebar under **AI Provider**, select your preferred provider from the dropdown (e.g., Anthropic, OpenAI, Gemini, Grok, DeepSeek, or Microsoft Copilot).
+1. In the sidebar under **AI Provider**, select your preferred provider from the dropdown (e.g., Anthropic, OpenAI, Gemini, Grok, DeepSeek, Microsoft Copilot, Ollama, or Groq).
 
 2. Choose a specific model from the **Model** dropdown.
 
-3. For **Microsoft Copilot (Azure)**, you will also see an **Azure Endpoint** field. Enter your Azure OpenAI resource URL.
+3. Some providers show additional fields:
+   - **Microsoft Copilot (Azure)** — Enter your **Azure Endpoint** URL.
+   - **Ollama (Local)** — Enter the **Ollama Host URL** if it's not running on the default `http://localhost:11434`.
 
-4. If you haven't set an API key in the server `.env` file, enter it in the **API Key** field. Keys entered here are stored in your browser's local storage and override any server-side key for that provider.
+4. If you haven't set an API key in the server `.env` file, enter it in the **API Key** field. Keys entered here are stored in your browser's local storage and override any server-side key for that provider. For **Ollama**, no API key is needed — leave the field empty.
+
+5. Click **Test Connection** to verify that the provider and model are reachable. On success, a **green dot** appears next to the model label confirming the connection is live. If the test fails, a **red dot** and error message appear so you can diagnose the issue (e.g., invalid API key, unreachable server, model not found). The status automatically resets when you change any setting.
 
 > Your provider and model selection is saved in your browser and persists across page refreshes.
 
@@ -485,7 +536,9 @@ aiVid/
 │           ├── gemini.js                 # Google (Gemini) provider
 │           ├── grok.js                   # xAI (Grok) provider
 │           ├── deepseek.js              # DeepSeek (Coder) provider
-│           └── copilot.js               # Microsoft Copilot (Azure OpenAI) provider
+│           ├── copilot.js               # Microsoft Copilot (Azure OpenAI) provider
+│           ├── ollama.js                # Ollama (Local) provider
+│           └── groq.js                  # Groq provider
 └── frontend/
     ├── package.json                      # Frontend dependencies
     ├── index.html                        # HTML entry point
@@ -612,6 +665,38 @@ Execute SQL against the connected Oracle database.
 POST /api/query/explain
 ```
 Explain a SQL/PL*SQL statement in plain English.
+
+---
+
+```
+POST /api/query/test-provider
+```
+Test connectivity to an AI provider and model. Sends a minimal request to verify the provider is reachable and the API key is valid.
+
+**Request body:**
+```json
+{
+  "provider": "groq",
+  "model": "llama-3.3-70b-versatile",
+  "apiKey": "optional-override-key",
+  "extraFields": {}
+}
+```
+
+**Response (success):**
+```json
+{
+  "success": true
+}
+```
+
+**Response (failure):**
+```json
+{
+  "success": false,
+  "error": "Groq API key is required"
+}
+```
 
 ### MCP Endpoints
 
@@ -789,6 +874,72 @@ Execute a custom tool. Renders the SQL template with the provided arguments and 
   "output": ["COUNT(*)\n----------\n42"]
 }
 ```
+
+---
+
+## Troubleshooting Tips
+
+### AI Provider Issues
+
+**"API key is required" error**
+Your API key is not set. Either enter it in the **API Key** field in the sidebar, or set the corresponding environment variable in `backend/.env`. Use the **Test Connection** button to verify before querying.
+
+**Test Connection shows red dot**
+- **Invalid API key** — Double-check the key has no extra spaces or quotes. Ensure it hasn't expired or been revoked.
+- **Network error / connection refused** — For cloud providers, check your internet connection. For Ollama, ensure `ollama serve` is running. For Groq, verify the API endpoint is reachable.
+- **Model not found** — The selected model may not be available. For Ollama, pull the model first (`ollama pull <model>`). For Groq, check their console for currently supported models.
+
+**Ollama connection refused**
+- Ensure Ollama is running: `ollama serve` (or check that the system service is active).
+- Default URL is `http://localhost:11434`. If running on a different host/port, update the **Ollama Host URL** field or set `OLLAMA_BASE_URL` in `.env`.
+- Verify the model is pulled: `ollama list` to see installed models.
+
+**Azure OpenAI / Microsoft Copilot errors**
+- Ensure you have deployed a model in your Azure OpenAI resource.
+- The model name in aiVid must match your Azure deployment name.
+- Check your endpoint URL format: `https://your-resource.openai.azure.com`.
+
+### Database Issues
+
+**Cannot connect to Oracle database**
+- Verify the database is running and accessible.
+- Check host, port, and service name are correct.
+- Ensure credentials are valid.
+- Check firewall rules for the specified port.
+
+**"Not connected to any database" when executing queries**
+Connect to a database first using the sidebar. SQL generation works without a connection, but execution requires one.
+
+### MCP & Custom Tools Issues
+
+**MCP server fails to start**
+- Ensure Oracle SQLcl 24.3+ is installed and `sql` is in your PATH.
+- Verify with `sql -version` in your terminal.
+- If installed in a non-standard location, set `SQLCL_PATH` in `backend/.env` or enter the path in the MCP Connection tab.
+- SQLcl requires Java (JDK 11+).
+
+**Custom tool execution: "null connection not allowed"**
+The MCP server process is running but has no active database connection (e.g., started with `/nolog`). Stop and restart the MCP server with valid database credentials.
+
+**Custom tool: "Could not find a SQL execution tool"**
+The MCP server does not expose a recognized SQL execution tool. Verify your SQLcl version (24.3+) supports MCP by checking the available tools in the Tools tab.
+
+**Custom tool: "Missing required parameters"**
+Required parameters were not filled in. Select the custom tool in the **Tools** tab and provide values for all fields marked with a red asterisk (*).
+
+### General Issues
+
+**Frontend shows blank page or API errors**
+- Ensure the backend is running on port 3001.
+- If running separately, the Vite proxy in `vite.config.js` handles API forwarding automatically.
+
+**`npm run dev` fails with "concurrently not found"**
+Run `npm install --include=dev` from the project root directory.
+
+**Generated SQL is inaccurate**
+- Connect to your database first so the schema context is sent to the AI.
+- Try a more specific prompt or a different/larger model.
+- Review and edit the generated SQL before executing.
 
 ---
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import * as api from '../services/api';
 
 const STORAGE_KEY = 'oracle-nlp-provider-config';
@@ -20,6 +20,10 @@ export default function ProviderSettings({ onConfigChange }) {
   const [config, setConfig] = useState(loadSaved);
   const [showKey, setShowKey] = useState(false);
 
+  // Connection test state: null | 'testing' | 'connected' | 'error'
+  const [testStatus, setTestStatus] = useState(null);
+  const [testError, setTestError] = useState('');
+
   // Fetch providers list on mount
   useEffect(() => {
     api.fetchProviders().then(res => {
@@ -32,6 +36,12 @@ export default function ProviderSettings({ onConfigChange }) {
     saveConfig(config);
     onConfigChange(config);
   }, [config, onConfigChange]);
+
+  // Reset test status when provider, model, apiKey, or extra fields change
+  useEffect(() => {
+    setTestStatus(null);
+    setTestError('');
+  }, [config.provider, config.model, config.apiKey, config.extraFields]);
 
   const currentProvider = providers.find(p => p.name === config.provider);
   const models = currentProvider?.models || [];
@@ -63,6 +73,28 @@ export default function ProviderSettings({ onConfigChange }) {
     }));
   };
 
+  const handleTestConnection = useCallback(async () => {
+    setTestStatus('testing');
+    setTestError('');
+    try {
+      const res = await api.testProvider({
+        provider: config.provider,
+        model: config.model,
+        apiKey: config.apiKey,
+        extraFields: config.extraFields,
+      });
+      if (res.success) {
+        setTestStatus('connected');
+      } else {
+        setTestStatus('error');
+        setTestError(res.error || 'Connection failed');
+      }
+    } catch (err) {
+      setTestStatus('error');
+      setTestError(err.message);
+    }
+  }, [config]);
+
   return (
     <div className="connection-form">
       {/* Provider Select */}
@@ -81,7 +113,15 @@ export default function ProviderSettings({ onConfigChange }) {
 
       {/* Model Select */}
       <div className="form-group">
-        <label>Model</label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          Model
+          {testStatus === 'connected' && (
+            <span className="status-dot connected" title="Connected" />
+          )}
+          {testStatus === 'error' && (
+            <span className="status-dot disconnected" title={testError} />
+          )}
+        </label>
         <select
           className="form-select"
           value={config.model}
@@ -93,7 +133,7 @@ export default function ProviderSettings({ onConfigChange }) {
         </select>
       </div>
 
-      {/* Extra Fields (e.g. Azure Endpoint for Copilot) */}
+      {/* Extra Fields (e.g. Azure Endpoint for Copilot, Ollama Host URL) */}
       {extraFields.map(field => (
         <div className="form-group" key={field.key}>
           <label>{field.label}</label>
@@ -127,6 +167,25 @@ export default function ProviderSettings({ onConfigChange }) {
           Optional if set in server .env
         </span>
       </div>
+
+      {/* Test Connection */}
+      <button
+        className="btn btn-secondary btn-sm"
+        onClick={handleTestConnection}
+        disabled={testStatus === 'testing'}
+        style={{ width: '100%' }}
+      >
+        {testStatus === 'testing'
+          ? <><span className="loading-spinner" /> Testing...</>
+          : testStatus === 'connected'
+            ? 'Connected'
+            : 'Test Connection'}
+      </button>
+      {testStatus === 'error' && (
+        <div style={{ fontSize: 11, color: 'var(--error)', marginTop: 2, wordBreak: 'break-word' }}>
+          {testError}
+        </div>
+      )}
     </div>
   );
 }

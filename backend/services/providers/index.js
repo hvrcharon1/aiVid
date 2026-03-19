@@ -4,6 +4,8 @@ const gemini = require('./gemini');
 const grok = require('./grok');
 const deepseek = require('./deepseek');
 const copilot = require('./copilot');
+const ollama = require('./ollama');
+const groq = require('./groq');
 
 const providers = {
   anthropic,
@@ -12,6 +14,8 @@ const providers = {
   grok,
   deepseek,
   copilot,
+  ollama,
+  groq,
 };
 
 function getProvider(name) {
