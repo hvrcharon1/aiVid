@@ -91,7 +91,7 @@ Ollama runs AI models locally on your machine — no API key or cloud account re
 3. Start the Ollama server: `ollama serve` (it runs on `http://localhost:11434` by default).
 4. In aiVid, select **Ollama (Local)** as the provider.
 5. Select the model you pulled from the model dropdown.
-6. Leave the **API Key** field empty (Ollama doesn't need one).
+6. Enter the **API Key** field (Ollama provides API Key).
 
 If Ollama is running on a different host or port, enter the URL in the **Ollama Host URL** field in the UI, or set it in `backend/.env`:
 
