@@ -61,7 +61,7 @@ aiVid is a full-stack web application that lets you connect to any Oracle databa
 | **xAI (Grok)** | Grok 3, Grok 3 Mini, Grok 2 | [console.x.ai](https://console.x.ai/) |
 | **DeepSeek (Coder)** | DeepSeek Coder, DeepSeek Chat (V3), DeepSeek Reasoner (R1) | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
 | **Microsoft Copilot (Azure)** | GPT-4o (Azure), GPT-4o Mini (Azure), GPT-4, GPT-3.5 Turbo | [portal.azure.com](https://portal.azure.com/) |
-| **Ollama (Local)** | Qwen 3 Coder (30B), GPT-OSS (20B), DeepSeek R1 (8B/Full), Llama 3.1 (8B/70B), Code Llama, DeepSeek Coder V2, Qwen 2.5 Coder, Mistral, Mixtral, Phi-3, Gemma 2 | No key needed — [ollama.com](https://ollama.com/) |
+| **Ollama (Local)** | Qwen 3 Coder (30B), GPT-OSS (20B), DeepSeek R1 (8B/Full), Llama 3.1 (8B/70B), Code Llama, DeepSeek Coder V2, Qwen 2.5 Coder, Mistral, Mixtral, Phi-3, Gemma 2 | [ollama.com](https://ollama.com/) |
 | **Groq** | Llama 3.3 70B, Llama 3.1 8B, DeepSeek R1 Distill 70B, Qwen QwQ 32B, Gemma 2 9B, Mixtral 8x7B, Compound Beta | [console.groq.com](https://console.groq.com/) |
 
 ### Microsoft Copilot Setup
